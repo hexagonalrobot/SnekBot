@@ -19,8 +19,9 @@ from keepAlive import keepAlive # web server code for replit
 
 # Importing lists from commands.py
 from commands import hello, uwuWords, sadWords, happyWords 
-from commands import commands, commandFacts, initialKeys, triggerWords
-from commands import defaultMsg, motivateMsg
+from commands import commands, commandFacts, helpCommands
+from commands import initialKeys, triggerWords, snekBotPrompt
+from commands import defaultMsg, motivateMsg, bezosPrompt
 
 # Creating a client variable set to the discord client method
 client = discord.Client()
@@ -36,7 +37,6 @@ if "active" not in db.keys():
 for i in initialKeys:
     if str(i) not in db.keys():
         db[str(i)] = []
-
 
 # getQuote function returns a random quote from the Zen Quotes api
 #
@@ -112,8 +112,8 @@ async def on_message(message):
         await message.channel.send(quote)
 
     # Command to list all commands
-    if msg.startswith("!commands"):
-        await message.channel.send("These are the commands you can use:")
+    if msg.lower().startswith(tuple(helpCommands)):
+        await message.channel.send("It sounds like you need help! \nThese are the commands you can use:")
 
         # Loop to display all the commands from the specified lists
         for i in range(len(commands)):
@@ -131,18 +131,20 @@ async def on_message(message):
         await message.channel.send("Database has been cleared.")
 
     # Responding to specific words
-    # Check if bot is active
-    if db["active"]:
+    # Check if bot is active and if user requests bot response
+    if db["active"] and msg.lower().startswith(tuple(snekBotPrompt)):
         # Multiple conditionals to parse message to be able to respond
         # in an "appropriate" manner
-        if any(word in msg.lower() for word in sadWords) or any(word in msg.lower() for word in triggerWords) or any(word in msg.lower() for word in happyWords) or any(word in msg.lower() for word in list(db["trigger"])):
-            if any(word in msg.lower() for word in sadWords):
-                options = motivateMsg + list(db["sad"]) + list(db["happy"]) 
-            if any(word in msg.lower() for word in triggerWords) or any(word in msg.lower() for word in list(db["trigger"])):
-                options = defaultMsg + list(db["bezos"]) + list(db["random"]) + list(db["butts"])
-            if any(word in msg.lower() for word in happyWords):
-                options = motivateMsg + defaultMsg + list(db["happy"])
-            await message.channel.send(random.choice(options))
+        if any(word in msg.lower() for word in sadWords):
+            options = motivateMsg + list(db["sad"]) + list(db["happy"]) 
+        elif any(word in msg.lower() for word in triggerWords) or any(word in msg.lower() for word in list(db["trigger"])):
+            options = defaultMsg + list(db["random"]) + list(db["butts"]) + list(db["sad"]) + list(db["happy"]) 
+        elif any(word in msg.lower() for word in happyWords):
+            options = motivateMsg + defaultMsg + list(db["happy"]) + list(db["random"])
+        elif any(word in msg.lower() for word in bezosPrompt):
+            options = list(db["bezos"])
+        
+        await message.channel.send(random.choice(options))
 
     # Add message to the database
     if msg.startswith("$add"):

@@ -19,8 +19,14 @@ defaultMsg = ["That's cool, bro.", "Nice", "That's great honey!", "Aye aye, dete
 
 commands = ["!zen", "$active", "$add", "$del", "$keys", "!tw"]
 
+helpCommands = ["!help", "$help", "!commands", "$commands"]
+
 commandFacts = ["Returns a random quote from Zen Quotes API", "(True or False) activates my automatic repsonse functionality", "($add -db_key- -phrase-) Adds a phrase to the given database key list", "($del -db_key- -index-) Deletes a phrase from the database key list at the provided index", "Displays database contents", "Lists all active trigger words"]
 
 initialKeys = ["butts", "bezos", "happy", "sad", "random", "trigger"]
 
-triggerWords = ["daddy", "jeffery", "bezos", "butt", "butts", "anxious", "bot", "robot", "cat", "dog", "bunny", "rabbit", "amazon"]
+triggerWords = [ "butt", "butts", "anxious", "cat", "dog", "bunny", "rabbit", "dust", "wets"]
+
+snekBotPrompt = ["snekbot", "snek", "bot", "robot"]
+
+bezosPrompt = ["daddy", "jeffery", "bezos", "amazon"]
