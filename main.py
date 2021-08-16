@@ -6,7 +6,7 @@
 # and allow for more functionality. Essentially, it is an uwu bot.
 #
 # @author robot-artificer
-# @version 1.5
+# @version 1.7
 
 # Importing necessary libraries
 import discord
@@ -82,6 +82,40 @@ def deleteMsg(key, index):
         del keyList[index]
         db[str(key)] = keyList
 
+# optionsLogic determines the list of options of phrases for SnekBot to
+# use in its replies. This method uses multiple conditionals to parse 
+# the supplied message to be able to respond in an "appropriate" manner
+#
+# @param message    The message sent by the user
+# @return           The list of options selected
+def optionsLogic(message):
+    if any(word in message for word in sadWords):
+        options = motivateMsg + list(db["sad"]) + list(db["happy"]) 
+    elif any(word in message for word in triggerWords) or any(word in message for word in list(db["trigger"])):
+        options = defaultMsg + list(db["random"]) + list(db["butts"]) + list(db["sad"]) + list(db["happy"]) + otherKeyOptions()
+    elif any(word in message for word in happyWords):
+        options = motivateMsg + defaultMsg + list(db["happy"]) + list(db["random"]) + otherKeyOptions()
+    elif any(word in message for word in bezosPrompt):
+        options = list(db["bezos"])
+    
+    return options
+
+# otherKeyOptions creates a list of phrases from database keys that
+# are not included in the initialKeys list
+#
+# @return   The list of phrases from all the keys not in initialKeys
+def otherKeyOptions():
+    otherList = []  # List to hold multiple lists from db
+    
+    # Traverse keys
+    for i in db.keys():
+        # Check if key is not in intialKeys or "active"
+        if i not in initialKeys and i != "active":
+            # Add database contents list to otherList
+            otherList = otherList + list(db[str(i)])
+    
+    return otherList
+
 # Events for Discord Client
 # on_ready event
 @client.event
@@ -133,17 +167,11 @@ async def on_message(message):
     # Responding to specific words
     # Check if bot is active and if user requests bot response
     if db["active"] and msg.lower().startswith(tuple(snekBotPrompt)):
-        # Multiple conditionals to parse message to be able to respond
-        # in an "appropriate" manner
-        if any(word in msg.lower() for word in sadWords):
-            options = motivateMsg + list(db["sad"]) + list(db["happy"]) 
-        elif any(word in msg.lower() for word in triggerWords) or any(word in msg.lower() for word in list(db["trigger"])):
-            options = defaultMsg + list(db["random"]) + list(db["butts"]) + list(db["sad"]) + list(db["happy"]) 
-        elif any(word in msg.lower() for word in happyWords):
-            options = motivateMsg + defaultMsg + list(db["happy"]) + list(db["random"])
-        elif any(word in msg.lower() for word in bezosPrompt):
-            options = list(db["bezos"])
+        # Set the options list to the return value of optionsLogic
+        # by passing in the lowercase values of the supplied message
+        options = optionsLogic(msg.lower())
         
+        # Have the bot reply with a random choice based on the options list
         await message.channel.send(random.choice(options))
 
     # Add message to the database
@@ -163,21 +191,19 @@ async def on_message(message):
 
     # Delete message from the database
     if msg.startswith("$del"):
-        # Create temporary list
-        tempList = []
-
         # Parse message based on the assumption that the message is 3 parts,
         # with a number at the end
         tempMsg = msg.split("$del ", 1)[1]
         tempKey = tempMsg.split()[0]
-        tempIdx = str(tempMsg).split(" ", 1)[1]
+        tempIdx = int(str(tempMsg).split(" ", 1)[1])
 
         # Check if the provided key is in the database
         if str(tempKey) in db.keys():
             # Call deleteMsg method by passing in values
             deleteMsg(tempKey, tempIdx)
-            tempList = list(db(str(tempKey)))
-        await message.channel.send(tempList)
+
+        # Display updated database list
+        await message.channel.send(list(db[str(tempKey)]))
 
     # Display the contents of the database
     if msg.startswith("$keys"):
@@ -213,6 +239,11 @@ async def on_message(message):
         else:
             db["active"] = False
             await message.channel.send("Bot is deactivated.")
+
+    # Testing function
+    if msg.startswith("$test"):
+        testList = otherKeyOptions()
+        await message.channel.send(list(testList))
 
 # Webserver keepAlive function
 keepAlive()
